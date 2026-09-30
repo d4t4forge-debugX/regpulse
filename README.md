@@ -1,5 +1,7 @@
 # RegPulse
 
+[![Evals](https://github.com/d4t4forge-debugX/regpulse/actions/workflows/eval.yml/badge.svg)](https://github.com/d4t4forge-debugX/regpulse/actions/workflows/eval.yml)
+
 **Regulatory change monitoring for compliance teams.** RegPulse watches for new SEC rules, checks them against a company's own public risk disclosures, and writes a short memo saying whether that language may now be outdated or is missing something.
 
 Built end to end as a multi-stage pipeline: data ingestion, retrieval-augmented generation (RAG), an LLM-as-judge, graph orchestration, evaluation, scheduling, and a dashboard.
