@@ -347,8 +347,8 @@ The Gemini free tier proved too small for this project (about 20 requests per da
 - [x] Evaluation harness with fail-loud checks
 - [x] Streamlit dashboard
 - [x] Scheduled runs with cron
-- [ ] CI: run the evaluations on every change (GitHub Actions)
-- [ ] Docker packaging
+- [x] CI: run the evaluations on every change (GitHub Actions)
+- [ ] Docker packaging (optional)
 - [ ] Larger gold sets, labeled blind before running the pipeline
 - [ ] Broader fetching beyond SEC rules
 - [ ] Revisit visual retrieval for scanned or table-heavy filings
