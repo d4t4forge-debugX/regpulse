@@ -235,8 +235,8 @@ The `eval/` folder also holds a few one-off analysis scripts used during develop
 **Requirements:** a recent Python 3, a Gemini API key, and about 2 GB of disk for the virtual environment and downloaded models. Developed on macOS (Apple Silicon).
 
 ```
-git clone <your-repo-url>
-cd Regpulse
+git clone https://github.com/d4t4forge-debugX/regpulse.git
+cd regpulse
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
