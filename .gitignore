@@ -1,0 +1,10 @@
+.env
+.venv/
+chroma_db/
+logs/
+__pycache__/
+.DS_Store
+.idea/
+ingestion/page_images/
+vectorstore/colpali_embeddings/
+PROJECT_NOTES.md
