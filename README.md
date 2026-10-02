@@ -287,10 +287,10 @@ python -m eval.run_eval --diff       # diff evaluation (0 Gemini calls)
 
 ## 12. Scheduling
 
-Cron runs the pipeline on weekdays at 10:00:
+Cron runs the pipeline on weekdays at 11:30:
 
 ```
-0 10 * * 1-5 /path/to/Regpulse/scripts/run_pipeline.sh >> /path/to/Regpulse/logs/cron.log 2>&1
+30 11 * * 1-5 /path/to/Regpulse/scripts/run_pipeline.sh >> /path/to/Regpulse/logs/cron.log 2>&1
 ```
 
 Add it with `crontab -e`, using your real absolute paths. Why weekdays: the Federal Register publishes on weekdays, and SEC rules are infrequent (18 in the last 365 days).
@@ -308,7 +308,7 @@ To check a run afterwards:
 ls -t logs | head -3 && cat logs/cron.log
 ```
 
-A healthy run leaves a `pipeline_<date>_10-00-...` log and an empty `cron.log`.
+A healthy run leaves a `pipeline_<date>_11-30-...` log and an empty `cron.log`.
 
 ## 13. Cost
 
