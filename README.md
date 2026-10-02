@@ -300,7 +300,7 @@ Things to know:
 - `run_pipeline.sh` calls `.venv/bin/python` by path and does its own `cd`, because cron does not load your shell startup files.
 - The `>> logs/cron.log 2>&1` part captures launch errors (bad path, permissions) that the pipeline's own logs cannot.
 - On macOS, a project under `~/Desktop` needs Full Disk Access granted to `/usr/sbin/cron`, or the job fails with "Operation not permitted".
-- **Cron does not run while the machine is asleep or shut down, and it does not catch up afterwards.** A missed 10:00 run is skipped.
+- **Cron does not run while the machine is asleep or shut down, and it does not catch up afterwards.** A missed 11:30 run is skipped.
 
 To check a run afterwards:
 
