@@ -26,6 +26,7 @@ Built end to end as a multi-stage pipeline: data ingestion, retrieval-augmented 
 14. [Known limitations](#14-known-limitations)
 15. [Lessons learned](#15-lessons-learned)
 16. [Roadmap](#16-roadmap)
+17. [License](#17-license)
 
 ---
 
@@ -354,3 +355,7 @@ The Gemini free tier proved too small for this project (about 20 requests per da
 - [ ] Larger gold sets, labeled blind before running the pipeline
 - [ ] Broader fetching beyond SEC rules
 - [ ] Revisit visual retrieval for scanned or table-heavy filings
+
+## 17. License
+
+MIT. See [LICENSE](LICENSE).
