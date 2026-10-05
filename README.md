@@ -324,7 +324,7 @@ The Gemini free tier proved too small for this project (about 20 requests per da
 - **One company.** Only Apple's 10-K is supported.
 - **Cron needs the machine awake** at run time.
 - **Retrieval is text-only.** The vector store holds Risk Factors as plain chunks with no page metadata.
-- **Memo quality is not scored.** The evaluations check verdicts, not the wording of memos, which are read by hand.
+- **Memo quality is not scored.** The evaluations check verdicts, not the wording of memos, which are read by hand. Memos are drafted by an LLM and can overreach. For example, a memo may say the 10-K was reviewed in full when only the top 10 retrieved Risk Factors passages were checked, or it may extrapolate beyond the regulation's abstract. Treat them as starting points for a human reviewer, as each memo itself says.
 
 ## 15. Lessons learned
 
