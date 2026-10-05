@@ -407,5 +407,30 @@
       "judge_reasoning": "None of the excerpts discuss SEC filing procedures, EDGAR system updates, or administrative reporting requirements, focusing instead on unrelated topics like the EU Digital Markets Act, tax laws, data privacy, and cybersecurity.",
       "memo_text": "**MEMORANDUM**\n\n**TO:** Apple Compliance Team  \n**FROM:** Compliance Assistant  \n**SUBJECT:** Preliminary Evaluation of SEC Regulation: Adoption of Updated EDGAR Filer Manual (Release 26.1)  \n\nAfter reviewing Apple\u2019s current 10-K Risk Factors, we have confirmed that no existing disclosure addresses the technical, operational, or compliance aspects of the newly updated EDGAR Filer Manual. If a new or updated disclosure is deemed necessary, it should focus at a high level on the operational risks associated with implementing these updated filing standards, including potential reporting delays, increased administrative costs, or system integration issues if our financial reporting software fails to align with the new schema and validation requirements. Please note that this analysis is intended solely as an initial starting point for the compliance team\u2019s evaluation of Release 26.1 and does not constitute final legal or compliance advice."
     }
+  },
+  {
+    "title": "Commission Quorum Requirement",
+    "abstract": "The Securities and Exchange Commission (\"Commission\") is amending its rules concerning the circumstances under which a quorum of the Commission is present. The amendments are designed to promote flexibility and finality of agency rulemaking.",
+    "publication_date": "2026-10-02",
+    "document_number": "2026-20262",
+    "html_url": "https://www.federalregister.gov/documents/2026/10/02/2026-20262/commission-quorum-requirement",
+    "category": "substantive",
+    "domain": "Market and trading regulation",
+    "domain_score": 0.32,
+    "domain_confidence_gap": 0.13,
+    "has_relevant_match": false,
+    "relevant_chunk_number": null,
+    "judge_reasoning": "None of the excerpts discuss the internal administrative procedures, rulemaking flexibility, or quorum requirements of the Securities and Exchange Commission.",
+    "best_distance": 1.172,
+    "memo": {
+      "regulation_title": "Commission Quorum Requirement",
+      "regulation_abstract": "The Securities and Exchange Commission (\"Commission\") is amending its rules concerning the circumstances under which a quorum of the Commission is present. The amendments are designed to promote flexibility and finality of agency rulemaking.",
+      "publication_date": "2026-10-02",
+      "document_number": "2026-20262",
+      "html_url": "https://www.federalregister.gov/documents/2026/10/02/2026-20262/commission-quorum-requirement",
+      "memo_type": "coverage_gap",
+      "judge_reasoning": "None of the excerpts discuss the internal administrative procedures, rulemaking flexibility, or quorum requirements of the Securities and Exchange Commission.",
+      "memo_text": "**MEMORANDUM**\n\n**To:** Apple Compliance Team  \n**From:** Compliance Advisory Support  \n**Subject:** Preliminary Assessment: SEC Commission Quorum Requirement Regulation\n\nAfter a thorough review of Apple\u2019s most recent Form 10-K, we have confirmed that no existing disclosure in our Risk Factors section addresses the SEC\u2019s newly published \"Commission Quorum Requirement\" regulation. At a high level, any new or updated disclosure may need to address the potential risks of increased regulatory velocity and decreased procedural grounds for challenging SEC actions, as more flexible quorum rules could accelerate the finality of agency rulemaking and enforcement decisions affecting our compliance operations. Please note that this analysis is intended solely as an initial starting point for the compliance team\u2019s formal evaluation and does not constitute final legal or compliance advice."
+    }
   }
 ]

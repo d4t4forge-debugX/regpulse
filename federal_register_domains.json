@@ -119,5 +119,16 @@
     "domain": "Recordkeeping and filing systems",
     "domain_score": 0.3,
     "domain_confidence_gap": 0.12
+  },
+  {
+    "title": "Commission Quorum Requirement",
+    "abstract": "The Securities and Exchange Commission (\"Commission\") is amending its rules concerning the circumstances under which a quorum of the Commission is present. The amendments are designed to promote flexibility and finality of agency rulemaking.",
+    "publication_date": "2026-10-02",
+    "document_number": "2026-20262",
+    "html_url": "https://www.federalregister.gov/documents/2026/10/02/2026-20262/commission-quorum-requirement",
+    "category": "substantive",
+    "domain": "Market and trading regulation",
+    "domain_score": 0.32,
+    "domain_confidence_gap": 0.13
   }
 ]
