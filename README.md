@@ -264,6 +264,8 @@ python -m vectorstore.chroma_store
 
 The first run downloads the Hugging Face models (the zero-shot model is over 1 GB), so it takes a while.
 
+**Optional:** the ColQwen2 visual-retrieval experiment needs a few extra packages. Install them with `pip install -r requirements-colpali.txt`, then run `playwright install chromium`. The main pipeline, dashboard and evaluations do not need them.
+
 ## 11. Running RegPulse
 
 Run everything from the project root, as modules.
