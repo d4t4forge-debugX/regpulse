@@ -97,6 +97,16 @@ flowchart LR
 | 7 | Batch runner | `pipeline/run_graph.py` | Loops over all documents, skips ones already done, saves after each. | `graph_results.json` |
 | 8 | Dashboard | `app/streamlit_app.py` | Shows memos with filtering, judge reasoning, and source links. | (browser) |
 
+### The dashboard
+
+The Streamlit dashboard lists every memo the pipeline has written. The sidebar filters by memo type, and a caption shows how many administrative regulations were screened out before reaching this stage.
+
+![RegPulse dashboard: table of coverage-gap memos with the memo-type filter](docs/dashboard-overview.png)
+
+Each memo expands to show its text, the judge's reasoning, and a link to the source regulation.
+
+![An expanded memo with the judge's reasoning and a link to the source regulation](docs/dashboard-memo.png)
+
 ### The retrieval design
 
 Apple's Risk Factors text is split into **500-character chunks with a 50-character overlap**, embedded with `all-MiniLM-L6-v2`, and stored in a local Chroma collection named `apple_risk_factors`. For each regulation, the title and abstract become the query. The **10 closest chunks** are passed to the Gemini judge, which returns:
