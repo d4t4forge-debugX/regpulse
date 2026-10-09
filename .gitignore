@@ -8,3 +8,4 @@ __pycache__/
 ingestion/page_images/
 vectorstore/colpali_embeddings/
 PROJECT_NOTES.md
+RegPulse*Roadmap.md
