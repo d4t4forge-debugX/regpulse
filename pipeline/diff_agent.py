@@ -7,6 +7,8 @@ ADMINISTRATIVE_PHRASES = [
     "Extension of Compliance Date",
     "Correction",
     "EDGAR Filer Manual",
+    "confirming the effective date",
+    "Compliance Date Extension",
 ]
 
 def classify_document(title, abstract):

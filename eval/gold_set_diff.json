@@ -5,7 +5,7 @@
   {"document_number": "2026-19671", "title": "Clarifying the Scope of “Applicable Requirements” Under State Operating Permit Programs and the Federal Operating Permit Program", "expected_category": "substantive"},
   {"document_number": "2026-17088", "title": "Carboxin; Pesticide Tolerances", "expected_category": "substantive"},
   {"document_number": "2026-20640", "title": "Air Plan Approval; Oklahoma; Interstate Transport Requirements for the 2010 SO2 NAAQS", "expected_category": "substantive"},
-  {"document_number": "2026-15569", "title": "Pipeline Safety: Electronic Retention of Part 194 Response Plans", "expected_category": "substantive"},
+  {"document_number": "2026-15569", "title": "Pipeline Safety: Electronic Retention of Part 194 Response Plans", "expected_category": "administrative", "note": "relabeled after the judge run: the original label was written from the title; the abstract is a confirmation of the effective date of a direct final rule published earlier, i.e. housekeeping (original label: substantive)"},
   {"document_number": "2026-19154", "title": "Energy Conservation Program: Energy Conservation Standards for Manufactured Housing", "expected_category": "substantive"},
   {"document_number": "2026-16111", "title": "Hazardous Materials: Allowing Fireworks Certification Agencies (FCAs) To Approve Professional Fireworks", "expected_category": "substantive"},
   {"document_number": "2026-20276", "title": "State of Indiana: Discontinuance of Certain Commission Regulatory Authority Within the State, Notice of Agreement Between the Nuclear Regulatory Commission and the State of Indiana", "expected_category": "substantive"},
@@ -21,6 +21,6 @@
   {"document_number": "2026-15192", "title": "Perchloroethylene (PCE) and Carbon Tetrachloride (CTC); Regulation under the Toxic Substances Control Act (TSCA); Compliance Date Extensions", "expected_category": "administrative"},
   {"document_number": "2026-18132", "title": "Renewable Fuel Standard (RFS) Program: Extension of 2025 Compliance Reporting Deadline", "expected_category": "administrative"},
   {"document_number": "2026-15493", "title": "Air Plan Approval; Rhode Island; Update to Materials Incorporated by Reference", "expected_category": "administrative"},
-  {"document_number": "2026-15578", "title": "Pipeline Safety: Standards Update-ASTM D2513", "expected_category": "substantive"},
+  {"document_number": "2026-15578", "title": "Pipeline Safety: Standards Update-ASTM D2513", "expected_category": "administrative", "note": "relabeled after the judge run: the original label was written from the title; the abstract is a confirmation of the effective date of a direct final rule published earlier, i.e. housekeeping (original label: substantive)"},
   {"document_number": "2026-20517", "title": "Energy Conservation Program: Test Procedures for Commercial Warm Air Furnaces", "expected_category": "substantive"}
 ]
