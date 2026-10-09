@@ -2,6 +2,8 @@ import json
 import sys
 import time
 
+from pipeline.review import review_reason
+
 GOLD_FILE = "eval/gold_set.json"
 GOLD_DIFF_FILE = "eval/gold_set_diff.json"
 DOCS_FILE = "federal_register_docs.json"
@@ -99,6 +101,28 @@ def score(gold, predictions):
         print("\nNo mismatches.")
 
 
+def review_check(gold, filename=RETRIEVAL_FILE):
+    """How well does the needs-review flag pick out the judge's mistakes on memo-producing verdicts?"""
+    with open(filename, "r") as f:
+        results_by_id = {d["document_number"]: d for d in json.load(f)}
+
+    wrong_flagged = wrong_total = right_flagged = right_total = 0
+    for entry in gold:
+        result = results_by_id[entry["document_number"]]
+        if result.get("verdict") not in ("covered", "uncovered"):
+            continue  # no memo is written, so there is nothing to review
+        flagged = review_reason(result) is not None
+        if result["verdict"] == entry["expected_verdict"]:
+            right_total += 1
+            right_flagged += flagged
+        else:
+            wrong_total += 1
+            wrong_flagged += flagged
+
+    print(f"\nNeeds-review flag on gold memos: catches {wrong_flagged} of {wrong_total} wrong verdicts, "
+          f"also flags {right_flagged} of {right_total} correct ones")
+
+
 def diff_eval():
     """Check classify_document against the diff-step gold set. 0 cost, always fresh.
     Exits with an error if any gold doc is missing from the docs file."""
@@ -147,3 +171,5 @@ if __name__ == "__main__":
             print(f"Scoring against existing {RETRIEVAL_FILE} (0 Gemini calls)...\n")
             predictions = get_predictions_from_existing_file(gold)
         score(gold, predictions)
+        if "--rerun" not in sys.argv:
+            review_check(gold)
