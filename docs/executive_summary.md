@@ -19,7 +19,7 @@ How many rules reach a human reviewer, and how many of those actually matter to 
 3. Retrieves the 10 closest passages from the company's Risk Factors (local embeddings and vector store).
 4. An LLM judge (Gemini) decides in two steps: does the rule materially affect this company, and if so, does a passage already cover it?
 5. Writes an "outdated" memo (a passage covers it and may need updating) or a "coverage gap" memo (it applies but nothing covers it). Rules that do not apply get no memo.
-6. Flags memos for human review when the verdict rests on a weak match or claims a gap, and shows everything in a dashboard.
+6. Flags memos for human review when the verdict rests on a weak match or claims a gap, and shows everything in a dashboard where a reviewer approves or rejects each memo with a note. Decisions are saved apart from the pipeline output, so a scheduled run never overwrites them.
 
 It runs on a weekday schedule, is orchestrated with LangGraph and traced in LangSmith, and both evaluations run in CI on every change. All company-specific settings live in one config file.
 
@@ -47,5 +47,5 @@ For Duke Energy, 110 of 118 rules never reached a reviewer: 27 were housekeeping
 
 1. Grow both gold sets with cases labeled blind from their abstracts, including more coverage-gap examples.
 2. Test a prompt rule for generic catch-all text against those new cases.
-3. Record reviewer approve/reject decisions to measure the review flag in use.
+3. Use the recorded approve/reject decisions to measure the review flag in real use.
 4. Move to managed services: Bedrock or Azure OpenAI for the model, a managed vector store, a cloud scheduler.
