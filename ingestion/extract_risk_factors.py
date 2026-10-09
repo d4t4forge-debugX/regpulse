@@ -1,5 +1,5 @@
 import re
-from config import RISK_FACTORS_TEXT_FILE, TEN_K_FOOTER, TEN_K_HTML_FILE
+from config import RISK_FACTORS_TEXT_FILE, TEN_K_PAGE_NOISE_PATTERN, TEN_K_HTML_FILE
 
 def find_section_start(document_text, item_number, section_name):
     """
@@ -23,9 +23,9 @@ from bs4 import BeautifulSoup
 
 def remove_footer_noise(text):
     """
-    Removes repeating footer noise like "Apple Inc. | 2025 Form 10-K | 5"
+    Removes repeating page noise such as "Apple Inc. | 2025 Form 10-K | 5" (pattern set in config.py)
     """
-    pattern = re.escape(TEN_K_FOOTER) + r" \| \d+"
+    pattern = TEN_K_PAGE_NOISE_PATTERN
     text = re.sub(pattern, "", text)
     text = re.sub(r"\s+", " ", text)
 
