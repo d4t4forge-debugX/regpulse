@@ -130,5 +130,16 @@
     "domain": "Market and trading regulation",
     "domain_score": 0.32,
     "domain_confidence_gap": 0.13
+  },
+  {
+    "title": "Adoption of Updated EDGAR Filer Manual",
+    "abstract": "The Securities and Exchange Commission (\"Commission\") is adopting amendments to Volume II of the Electronic Data Gathering, Analysis, and Retrieval system Filer Manual (\"EDGAR Filer Manual\" or \"Filer Manual\") and related rules and forms. EDGAR Release 26.3 will be deployed in the EDGAR system on September 14, 2026.",
+    "publication_date": "2026-10-06",
+    "document_number": "2026-20461",
+    "html_url": "https://www.federalregister.gov/documents/2026/10/06/2026-20461/adoption-of-updated-edgar-filer-manual",
+    "category": "substantive",
+    "domain": "Recordkeeping and filing systems",
+    "domain_score": 0.29,
+    "domain_confidence_gap": 0.12
   }
 ]
