@@ -5,7 +5,6 @@ import time
 GOLD_FILE = "eval/gold_set.json"
 GOLD_DIFF_FILE = "eval/gold_set_diff.json"
 DOCS_FILE = "federal_register_docs.json"
-DOMAINS_FILE = "federal_register_domains.json"
 RETRIEVAL_FILE = "graph_results.json"
 VERDICTS = ("covered", "uncovered", "not_applicable")
 
@@ -49,11 +48,11 @@ def get_predictions_from_existing_file(gold, filename=RETRIEVAL_FILE):
 
 def get_predictions_fresh(gold):
     """Actually re-run judge_document on each gold doc. Costs 1 Gemini call per doc."""
-    with open(DOMAINS_FILE, "r") as f:
-        domains_by_id = {d["document_number"]: d for d in json.load(f)}
+    with open(DOCS_FILE, "r") as f:
+        docs_by_id = {d["document_number"]: d for d in json.load(f)}
 
     # Check before loading models or making any Gemini call.
-    check_no_missing(gold, domains_by_id, DOMAINS_FILE)
+    check_no_missing(gold, docs_by_id, DOCS_FILE)
 
     from sentence_transformers import SentenceTransformer
     from pipeline.retrieval_agent import judge_document
@@ -65,12 +64,11 @@ def get_predictions_fresh(gold):
     predictions = {}
     for entry in gold:
         doc_id = entry["document_number"]
-        doc = judge_document(dict(domains_by_id[doc_id]), collection, model)
+        doc = judge_document(dict(docs_by_id[doc_id]), collection, model)
         predictions[doc_id] = doc["verdict"]
         print(f"  {doc_id}: {doc['verdict']}")
         time.sleep(13)
     return predictions
-
 
 def score(gold, predictions):
     """Compare 3-way verdicts against the gold labels and print a confusion matrix."""

@@ -59,43 +59,7 @@ Do not present this as final compliance or legal advice — frame it as a starti
     response = call_gemini_with_retry(prompt)
     return response.text
 
-def run_impact_agent(input_file="federal_register_retrieval.json", output_file="coverage_gap_memos.json"):
-    import json
-    import os
 
-    with open(input_file) as f:
-        documents = json.load(f)
-
-    if os.path.exists(output_file):
-        with open(output_file) as f:
-            results = json.load(f)
-    else:
-        results = []
-
-    already_processed = {r["document_number"] for r in results}
-
-    for doc in documents:
-        if doc["document_number"] in already_processed:
-            print(f"--- Skipping (already processed): {doc['title']} ---")
-            continue
-
-        memo_type = select_memo_type(doc)
-        if memo_type == "coverage_gap":
-            shell = build_coverage_gap_shell(doc)
-            shell["memo_text"] = generate_coverage_gap_memo_text(shell)
-        elif memo_type == "outdated":
-            shell = build_outdated_shell(doc)
-            shell["memo_text"] = generate_outdated_memo_text(shell)
-
-        results.append(shell)
-        print(f"--- {shell['regulation_title']} ---")
-        print(shell["memo_text"])
-        print()
-        with open(output_file, "w") as f:
-            json.dump(results, f, indent=2)
-        time.sleep(13)
-
-    return results
 
 def build_outdated_shell(doc):
     return {
@@ -130,5 +94,3 @@ Do not present this as final compliance or legal advice — frame it as a starti
     response = call_gemini_with_retry(prompt)
     return response.text
 
-if __name__ == "__main__":
-    run_impact_agent()
