@@ -24,3 +24,20 @@ DOMAIN_LABELS = [
     "Litigation and enforcement",
     "Recordkeeping and filing systems",
 ]
+
+
+# SEC EDGAR company identifier (10-digit, zero-padded CIK)
+COMPANY_CIK = "0000320193"
+
+# Local files: the raw 10-K and the Risk Factors text extracted from it
+TEN_K_HTML_FILE = "apple_10k_raw.html"
+RISK_FACTORS_TEXT_FILE = "apple_risk_factors_clean.txt"
+
+# Repeating page footer in the 10-K (followed by " | <page number>"), stripped during extraction
+TEN_K_FOOTER = "Apple Inc. | 2025 Form 10-K"
+
+# Chroma collection holding the embedded Risk Factors chunks
+CHROMA_COLLECTION = "apple_risk_factors"
+
+# Federal Register agencies whose final rules are fetched (API slugs)
+FEDERAL_REGISTER_AGENCIES = ["securities-and-exchange-commission"]

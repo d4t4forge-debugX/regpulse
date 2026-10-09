@@ -1,13 +1,14 @@
 import requests
 import os
+from config import COMPANY_CIK, TEN_K_HTML_FILE
 
-LOCAL_FILE = "apple_10k_raw.html"
+LOCAL_FILE = TEN_K_HTML_FILE
 headers = {
     "User-Agent": "Rohit Personal Project rohit@example.com"
 }
 
 # Step 1: Get Apple's filing history from SEC EDGAR
-submissions_url = "https://data.sec.gov/submissions/CIK0000320193.json"
+submissions_url = f"https://data.sec.gov/submissions/CIK{COMPANY_CIK}.json"
 response = requests.get(submissions_url, headers=headers)
 data = response.json()
 

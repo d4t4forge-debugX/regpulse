@@ -1,4 +1,5 @@
 import re
+from config import RISK_FACTORS_TEXT_FILE, TEN_K_FOOTER, TEN_K_HTML_FILE
 
 def find_section_start(document_text, item_number, section_name):
     """
@@ -24,7 +25,7 @@ def remove_footer_noise(text):
     """
     Removes repeating footer noise like "Apple Inc. | 2025 Form 10-K | 5"
     """
-    pattern = re.escape("Apple Inc.") + r" \| " + re.escape("2025 Form 10-K") + r" \| \d+"
+    pattern = re.escape(TEN_K_FOOTER) + r" \| \d+"
     text = re.sub(pattern, "", text)
     text = re.sub(r"\s+", " ", text)
 
@@ -44,7 +45,7 @@ def clean_html_to_text(raw_html):
     return text.strip()
 
 if __name__ == "__main__":
-    with open("apple_10k_raw.html", "r", encoding="utf-8") as f:
+    with open(TEN_K_HTML_FILE, "r", encoding="utf-8") as f:
         document_text = f.read()
 
     start_pos = find_section_start(document_text, "Item 1A", "Risk Factors")
@@ -63,8 +64,8 @@ if __name__ == "__main__":
         print("First 500 characters of clean text:")
         print(risk_factors_clean[:500])
 
-        with open("apple_risk_factors_clean.txt", "w", encoding="utf-8") as f:
+        with open(RISK_FACTORS_TEXT_FILE, "w", encoding="utf-8") as f:
             f.write(risk_factors_clean)
-        print("Saved to apple_risk_factors_clean.txt")
+        print(f"Saved to {RISK_FACTORS_TEXT_FILE}")
     else:
         print("Could not find one or both boundaries.")

@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+from config import FEDERAL_REGISTER_AGENCIES
 
 def save_documents(documents, filename="federal_register_docs.json"):
     """Merge newly fetched documents into the existing file, keyed by document_number,
@@ -45,7 +46,7 @@ def fetch_recent_sec_rules(per_page=100, days_back=365):
     start_date = (date.today() - timedelta(days=days_back)).isoformat()
 
     params = {
-        "conditions[agencies][]": "securities-and-exchange-commission",
+           "conditions[agencies][]": FEDERAL_REGISTER_AGENCIES,
         "conditions[type][]": "RULE",
         "conditions[publication_date][gte]": start_date,
         "order": "newest",

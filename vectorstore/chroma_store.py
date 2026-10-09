@@ -1,5 +1,7 @@
 import chromadb
 from sentence_transformers import SentenceTransformer
+from config import CHROMA_COLLECTION, RISK_FACTORS_TEXT_FILE
+
 def chunk_text(text, chunk_size=500, overlap=50):
 
     chunks = []
@@ -13,11 +15,11 @@ def chunk_text(text, chunk_size=500, overlap=50):
 
 def get_collection():
     client = chromadb.PersistentClient(path="chroma_db")
-    collection = client.get_or_create_collection(name="apple_risk_factors")
+    collection = client.get_or_create_collection(name=CHROMA_COLLECTION)
     return collection
 
 def build_collection():
-    with open("apple_risk_factors_clean.txt", "r", encoding="utf-8") as f:
+    with open(RISK_FACTORS_TEXT_FILE, "r", encoding="utf-8") as f:
         text = f.read()
 
     chunks = chunk_text(text)
