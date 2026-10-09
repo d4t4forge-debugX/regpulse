@@ -7,6 +7,7 @@ GOLD_DIFF_FILE = "eval/gold_set_diff.json"
 DOCS_FILE = "federal_register_docs.json"
 DOMAINS_FILE = "federal_register_domains.json"
 RETRIEVAL_FILE = "graph_results.json"
+VERDICTS = ("covered", "uncovered", "not_applicable")
 
 
 def load_gold(filename=GOLD_FILE):
@@ -26,14 +27,22 @@ def check_no_missing(gold, available_ids, source_file):
 
 
 def get_predictions_from_existing_file(gold, filename=RETRIEVAL_FILE):
-    """Read has_relevant_match straight from the last saved run. 0 Gemini calls."""
+    """Read the 3-way verdict straight from the last saved run. 0 Gemini calls."""
     with open(filename, "r") as f:
         results_by_id = {d["document_number"]: d for d in json.load(f)}
 
     check_no_missing(gold, results_by_id, filename)
 
+    no_verdict = [e["document_number"] for e in gold if "verdict" not in results_by_id[e["document_number"]]]
+    if no_verdict:
+        print(f"\nERROR: {len(no_verdict)} gold docs in {filename} were judged before the 3-way judge existed:")
+        for doc_id in no_verdict:
+            print(f"  - {doc_id}")
+        print("Re-run them through the graph first. Refusing to score old verdicts.")
+        sys.exit(1)
+
     return {
-        entry["document_number"]: results_by_id[entry["document_number"]]["has_relevant_match"]
+        entry["document_number"]: results_by_id[entry["document_number"]]["verdict"]
         for entry in gold
     }
 
@@ -57,41 +66,32 @@ def get_predictions_fresh(gold):
     for entry in gold:
         doc_id = entry["document_number"]
         doc = judge_document(dict(domains_by_id[doc_id]), collection, model)
-        predictions[doc_id] = doc["has_relevant_match"]
-        print(f"  {doc_id}: {doc['has_relevant_match']}")
+        predictions[doc_id] = doc["verdict"]
+        print(f"  {doc_id}: {doc['verdict']}")
         time.sleep(13)
     return predictions
 
 
 def score(gold, predictions):
-    tp = fp = tn = fn = 0
+    """Compare 3-way verdicts against the gold labels and print a confusion matrix."""
+    confusion = {(expected, actual): 0 for expected in VERDICTS for actual in VERDICTS}
     mismatches = []
 
     for entry in gold:
-        doc_id = entry["document_number"]
-        expected = entry["expected_relevant"]
-        actual = predictions[doc_id]
+        expected = entry["expected_verdict"]
+        actual = predictions[entry["document_number"]]
+        confusion[(expected, actual)] += 1
+        if expected != actual:
+            mismatches.append((entry["title"], f"expected {expected}, got {actual}"))
 
-        if expected and actual:
-            tp += 1
-        elif not expected and not actual:
-            tn += 1
-        elif not expected and actual:
-            fp += 1
-            mismatches.append((entry["title"], "expected not-relevant, got relevant"))
-        elif expected and not actual:
-            fn += 1
-            mismatches.append((entry["title"], "expected relevant, got not-relevant"))
+    total = len(gold)
+    correct = sum(confusion[(v, v)] for v in VERDICTS)
+    print(f"\n{correct}/{total} verdicts correct ({correct / total:.2%})")
 
-    total = tp + tn + fp + fn
-    accuracy = (tp + tn) / total if total else 0
-    precision = tp / (tp + fp) if (tp + fp) else float("nan")
-    recall = tp / (tp + fn) if (tp + fn) else float("nan")
-
-    print(f"\n{total} examples scored ({tp} TP, {tn} TN, {fp} FP, {fn} FN)")
-    print(f"Accuracy:  {accuracy:.2f}")
-    print(f"Precision: {precision:.2f}")
-    print(f"Recall:    {recall:.2f}")
+    print("\nConfusion matrix (rows = expected, columns = predicted):")
+    print(" " * 16 + "".join(f"{v:>16}" for v in VERDICTS))
+    for expected in VERDICTS:
+        print(f"{expected:<16}" + "".join(f"{confusion[(expected, actual)]:>16}" for actual in VERDICTS))
 
     if mismatches:
         print("\nMismatches:")
