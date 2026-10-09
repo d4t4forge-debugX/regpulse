@@ -1,14 +1,14 @@
 [
-  {"document_number": "2026-01052", "title": "Adjusting Imports of Semiconductors, Semiconductor Manufacturing Equipment, and Their Derivative Products Into the United States", "expected_relevant": true, "expected_verdict": "covered"},
-  {"document_number": "2025-05904", "title": "Children's Online Privacy Protection Rule", "expected_relevant": true, "expected_verdict": "covered"},
-  {"document_number": "2026-17926", "title": "Heightened Import Disclosures for Supply Chain Visibility", "expected_relevant": true, "expected_verdict": "covered"},
-  {"document_number": "2026-12787", "title": "Financial Data Transparency Act Joint Data Standards", "expected_relevant": false, "expected_verdict": "not_applicable", "note": "borderline - data standards may later change SEC filing formats, but impose nothing on Apple now"},
-  {"document_number": "2026-05635", "title": "Application of the Federal Securities Laws to Certain Types of Crypto Assets and Certain Transactions Involving Crypto Assets", "expected_relevant": false, "expected_verdict": "not_applicable"},
-  {"document_number": "2026-04202", "title": "Holding Foreign Insiders Accountable Act Disclosure", "expected_relevant": false, "expected_verdict": "not_applicable"},
-  {"document_number": "2025-18238", "title": "Acceleration of Effectiveness of Registration Statements of Issuers With Certain Mandatory Arbitration Provisions", "expected_relevant": false, "expected_verdict": "not_applicable"},
-  {"document_number": "2026-00789", "title": "Revision to License Review Policy for Advanced Computing Commodities", "expected_relevant": false, "expected_verdict": "not_applicable", "note": "borderline - export policy for Nvidia-class AI chips to China; affects chip exporters, not Apple directly"},
-  {"document_number": "2026-10373", "title": "Registered Offering Reform", "expected_relevant": false, "expected_verdict": "not_applicable"},
-  {"document_number": "2026-19334", "title": "National POW/MIA Recognition Day, 2026", "expected_relevant": false, "expected_verdict": "not_applicable"},
-  {"document_number": "2024-25088", "title": "Achieving 100% Wireless Handset Model Hearing Aid Compatibility", "expected_relevant": false, "expected_verdict": "uncovered", "note": "hard case - applies to every iPhone model, but the only Risk Factors text near it is a generic 'product design' catch-all"},
-  {"document_number": "2023-20333", "title": "Safety Standard for Button Cell or Coin Batteries and Consumer Products Containing Such Batteries", "expected_relevant": false, "expected_verdict": "uncovered", "note": "hard case - applies to AirTag (coin cell); Risk Factors never mention button or coin batteries"}
+  {"document_number": "2026-01052", "title": "Adjusting Imports of Semiconductors, Semiconductor Manufacturing Equipment, and Their Derivative Products Into the United States", "expected_verdict": "covered"},
+  {"document_number": "2025-05904", "title": "Children's Online Privacy Protection Rule", "expected_verdict": "covered"},
+  {"document_number": "2026-17926", "title": "Heightened Import Disclosures for Supply Chain Visibility", "expected_verdict": "covered"},
+  {"document_number": "2026-12787", "title": "Financial Data Transparency Act Joint Data Standards", "expected_verdict": "not_applicable", "note": "borderline - data standards may later change SEC filing formats, but impose nothing on Apple now"},
+  {"document_number": "2026-05635", "title": "Application of the Federal Securities Laws to Certain Types of Crypto Assets and Certain Transactions Involving Crypto Assets", "expected_verdict": "not_applicable"},
+  {"document_number": "2026-04202", "title": "Holding Foreign Insiders Accountable Act Disclosure", "expected_verdict": "not_applicable"},
+  {"document_number": "2025-18238", "title": "Acceleration of Effectiveness of Registration Statements of Issuers With Certain Mandatory Arbitration Provisions", "expected_verdict": "not_applicable"},
+  {"document_number": "2026-00789", "title": "Revision to License Review Policy for Advanced Computing Commodities", "expected_verdict": "not_applicable", "note": "borderline - export policy for Nvidia-class AI chips to China; affects chip exporters, not Apple directly"},
+  {"document_number": "2026-10373", "title": "Registered Offering Reform", "expected_verdict": "not_applicable"},
+  {"document_number": "2026-19334", "title": "National POW/MIA Recognition Day, 2026", "expected_verdict": "not_applicable"},
+  {"document_number": "2024-25088", "title": "Achieving 100% Wireless Handset Model Hearing Aid Compatibility", "expected_verdict": "uncovered", "note": "hard case - applies to every iPhone model, but the only Risk Factors text near it is a generic 'product design' catch-all"},
+  {"document_number": "2023-20333", "title": "Safety Standard for Button Cell or Coin Batteries and Consumer Products Containing Such Batteries", "expected_verdict": "uncovered", "note": "hard case - applies to AirTag (coin cell); Risk Factors never mention button or coin batteries"}
 ]

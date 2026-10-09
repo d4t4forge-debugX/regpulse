@@ -1,15 +1,21 @@
 import requests
 import os
+from dotenv import load_dotenv
 from config import COMPANY_CIK, TEN_K_HTML_FILE
 
+load_dotenv()
+
 LOCAL_FILE = TEN_K_HTML_FILE
+# The SEC asks every automated client to identify itself with a real contact email.
+# It is read from .env so it never appears in the public repo.
 headers = {
-    "User-Agent": "Rohit Personal Project rohit@example.com"
+    "User-Agent": f"Rohit Personal Project {os.environ['SEC_CONTACT_EMAIL']}"
 }
 
-# Step 1: Get Apple's filing history from SEC EDGAR
+# Step 1: Get the company's filing history from SEC EDGAR
 submissions_url = f"https://data.sec.gov/submissions/CIK{COMPANY_CIK}.json"
-response = requests.get(submissions_url, headers=headers)
+response = requests.get(submissions_url, headers=headers, timeout=30)
+response.raise_for_status()
 data = response.json()
 
 # Step 2: Find the most recent 10-K in that history
@@ -37,7 +43,8 @@ else:
     cik = data["cik"]
     doc_url = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{primary_document}"
 
-    doc_response = requests.get(doc_url, headers=headers)
+    doc_response = requests.get(doc_url, headers=headers, timeout=30)
+    doc_response.raise_for_status()
     document_text = doc_response.text
 
     with open(LOCAL_FILE, "w", encoding="utf-8") as f:
