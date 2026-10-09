@@ -1,0 +1,17 @@
+{
+  "2023-20333": {
+    "decided_at": "2026-10-09 18:00",
+    "decision": "rejected",
+    "note": "Catch-all match: chunk 6 is generic safety-law text, not about battery rules. Should be a coverage gap."
+  },
+  "2024-25088": {
+    "decided_at": "2026-10-09 17:46",
+    "decision": "approved",
+    "note": ""
+  },
+  "2025-05904": {
+    "decided_at": "2026-10-09 17:56",
+    "decision": "approved",
+    "note": ""
+  }
+}
