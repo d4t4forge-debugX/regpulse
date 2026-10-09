@@ -8,8 +8,8 @@ ADMINISTRATIVE_PHRASES = [
     "Delegated Authority",
     "List of Rules To Be Reviewed",
     "Extension of Compliance Date",
-    "Rescission of Policy",
     "Correction",
+    "EDGAR Filer Manual",
 ]
 
 def load_documents(filename="federal_register_docs.json"):
