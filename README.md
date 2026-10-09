@@ -2,7 +2,9 @@
 
 [![Evals](https://github.com/d4t4forge-debugX/regpulse/actions/workflows/eval.yml/badge.svg)](https://github.com/d4t4forge-debugX/regpulse/actions/workflows/eval.yml)
 
-**Regulatory change monitoring for compliance teams.** RegPulse watches for new rules in the Federal Register, decides whether each one actually applies to a company, checks it against the company's own public risk disclosures, and writes a short memo saying whether that language may now be outdated or is missing something.
+**Regulatory change monitoring for compliance teams.** RegPulse watches for new rules in the Federal Register, decides whether each one actually applies to a company, checks it against the company's own public risk disclosures, and writes a short memo saying whether that language may now be outdated or is missing something. Memos the system is unsure about are flagged for human review.
+
+It runs in two versions from the same code: **Apple** against SEC rules (this branch, `main`) and **Duke Energy** against FERC, EPA, NRC, DOE and PHMSA rules (the [`energy`](https://github.com/d4t4forge-debugX/regpulse/tree/energy) branch).
 
 Built end to end as a multi-stage pipeline: data ingestion, retrieval-augmented generation (RAG), an LLM-as-judge, graph orchestration, evaluation, scheduling, and a dashboard.
 
@@ -12,21 +14,25 @@ Built end to end as a multi-stage pipeline: data ingestion, retrieval-augmented 
 
 1. [The problem](#1-the-problem)
 2. [What RegPulse does](#2-what-regpulse-does)
-3. [Key terms in plain language](#3-key-terms-in-plain-language)
-4. [How it works](#4-how-it-works)
-5. [A worked example](#5-a-worked-example)
-6. [Design decisions and the evidence behind them](#6-design-decisions-and-the-evidence-behind-them)
-7. [Evaluation](#7-evaluation)
-8. [Tech stack](#8-tech-stack)
-9. [Project structure](#9-project-structure)
-10. [Getting started](#10-getting-started)
-11. [Running RegPulse](#11-running-regpulse)
-12. [Scheduling](#12-scheduling)
-13. [Cost](#13-cost)
-14. [Known limitations](#14-known-limitations)
-15. [Lessons learned](#15-lessons-learned)
-16. [Roadmap](#16-roadmap)
-17. [License](#17-license)
+3. [Two versions: Apple and Duke Energy](#3-two-versions-apple-and-duke-energy)
+4. [Key terms in plain language](#4-key-terms-in-plain-language)
+5. [How it works](#5-how-it-works)
+6. [A worked example](#6-a-worked-example)
+7. [Human review](#7-human-review)
+8. [Design decisions and the evidence behind them](#8-design-decisions-and-the-evidence-behind-them)
+9. [Evaluation](#9-evaluation)
+10. [Risk notes](#10-risk-notes)
+11. [How this runs in production](#11-how-this-runs-in-production)
+12. [The agent-boss loop](#12-the-agent-boss-loop)
+13. [Tech stack](#13-tech-stack)
+14. [Project structure](#14-project-structure)
+15. [Getting started](#15-getting-started)
+16. [Running RegPulse](#16-running-regpulse)
+17. [Scheduling](#17-scheduling)
+18. [Cost](#18-cost)
+19. [Lessons learned](#19-lessons-learned)
+20. [Roadmap](#20-roadmap)
+21. [License](#21-license)
 
 ---
 
@@ -47,11 +53,29 @@ Today, spotting this means someone reading each new regulation, deciding whether
    - **Covered:** a passage discusses the risk, so an **outdated** memo flags that it may need updating.
    - **Uncovered:** the rule affects the company but no passage discusses it, so a **coverage gap** memo flags it.
    - **Not applicable:** the rule does not affect the company, so **no memo** is written.
-7. **Shows the results** in a dashboard, with the judge's reasoning and a link back to the source regulation.
+7. **Flags memos for human review** when the verdict rests on a weak match or claims a coverage gap (see [Human review](#7-human-review)).
+8. **Shows the results** in a dashboard, with the judge's reasoning, the review flag, and a link back to the source regulation.
 
 The reference company in this project is **Apple**. Its real 10-K Risk Factors stand in for a company's "internal policy", because they are real, messy, and free to use. Every company-specific value lives in `config.py`, so the same pipeline can be pointed at another company.
 
-## 3. Key terms in plain language
+## 3. Two versions: Apple and Duke Energy
+
+The pipeline code is the same on both branches. Everything company-specific (name, SEC CIK, 10-K file names, the page-noise pattern, the Chroma collection, the regulators to fetch, the domain labels) lives in `config.py`, so a second company was a configuration change plus new gold sets.
+
+| | Apple (`main`) | Duke Energy (`energy`) |
+|---|---|---|
+| Reference filing | FY2025 10-K, Item 1A (151 chunks) | FY2025 10-K (combined filing), Item 1A (157 chunks) |
+| Regulators fetched | SEC, last 365 days (+7 hand-added documents from other agencies for evaluation) | FERC, EPA, NRC, DOE, PHMSA, last 90 days |
+| Documents | 31 | 118 |
+| Administrative / not applicable | 17 / 9 | 27 / 83 |
+| Memos (outdated + coverage gap) | 5 (4 + 1) | 8 (7 + 1) |
+| Memos flagged for review | 3 of 5 | 5 of 8 |
+| Judge evaluation | 11/12 | 10/11 |
+| Diff evaluation | 30/31 | 21/24 |
+
+Why 90 days for Duke: the five regulators published about 480 final rules in a year, most of them pesticide tolerances and air-plan approvals for states where Duke does not operate. Every substantive rule costs one judge call, so the window was cut to keep a full run to roughly 100 calls. The judge still screened out 83 of 91 substantive rules as not applicable to Duke.
+
+## 4. Key terms in plain language
 
 | Term | Meaning |
 |---|---|
@@ -68,7 +92,33 @@ The reference company in this project is **Apple**. Its real 10-K Risk Factors s
 | **Distance** | How far apart two embeddings are. Lower means more similar. |
 | **Confusion matrix** | A grid of expected answers (rows) against the system's answers (columns). Correct answers sit on the diagonal; every off-diagonal number is a specific kind of mistake. |
 
-## 4. How it works
+## 5. How it works
+
+### System view
+
+```mermaid
+flowchart LR
+    subgraph Sources
+        FR[Federal Register API]
+        SEC[SEC EDGAR 10-K]
+    end
+    subgraph Ingestion
+        F[fetch_federal_register]
+        X[extract Item 1A] --> V[(Chroma vector store)]
+    end
+    subgraph LangGraph["Per-regulation graph (LangGraph)"]
+        D[diff] --> C[classify] --> J[retrieve + judge] --> M[memo]
+    end
+    FR --> F --> D
+    SEC --> X
+    V --> J
+    M --> R[review flag] --> UI[Streamlit dashboard]
+    G[(Gemini)] -.-> J
+    G -.-> M
+    CRON[cron, weekdays 11:30] -.-> F
+    CI[GitHub Actions: evals on every push] -.-> EV[eval/run_eval.py]
+    LS[LangSmith tracing] -.-> LangGraph
+```
 
 ### Pipeline overview
 
@@ -100,11 +150,12 @@ The whole pipeline is two commands: fetch, then the graph. The graph runs every 
 | 5 | Memo | `pipeline/impact_agent.py` | Writes an outdated or coverage-gap memo with Gemini. Not-applicable rules get none. |
 | 6 | Graph | `pipeline/graph.py` | Wires stages 2 to 5 into a LangGraph workflow, one run per regulation. |
 | 7 | Batch runner | `pipeline/run_graph.py` | Loops over all documents, skips ones already done, saves after each one to `graph_results.json`. |
-| 8 | Dashboard | `app/streamlit_app.py` | Shows memos with filtering, judge reasoning, and source links. |
+| 8 | Review flag | `pipeline/review.py` | Marks memos a human should check before acting (see [Human review](#7-human-review)). |
+| 9 | Dashboard | `app/streamlit_app.py` | Shows memos with filtering, the review flag, judge reasoning, and source links. |
 
 ### The dashboard
 
-The Streamlit dashboard lists every memo the pipeline has written. The sidebar filters by memo type, and a caption shows how many regulations were screened out as administrative and how many were judged not applicable.
+The Streamlit dashboard lists every memo the pipeline has written. The sidebar filters by memo type or to flagged memos only, flagged memos carry a warning with the reason, and a caption shows how many regulations were screened out as administrative and how many were judged not applicable.
 
 ![RegPulse dashboard: table of memos with the memo-type filter](docs/dashboard-overview.png)
 
@@ -143,7 +194,7 @@ The zero-shot classifier and the embedding model are loaded once and reused for 
 
 Every data file is keyed by the Federal Register `document_number`, and every save **merges** into the existing file by that key. Nothing is overwritten wholesale, so no run can shrink a file another step depends on.
 
-## 5. A worked example
+## 6. A worked example
 
 These are real results from the current data (31 documents: 17 administrative, 9 not applicable, 5 memos).
 
@@ -165,7 +216,25 @@ Every iPhone model sold in the US must comply, but Apple's Risk Factors never me
 
 A ceremonial presidential proclamation with no abstract. RegPulse falls back to the title alone, and the judge returns `not_applicable` (distance 1.772, the farthest of all). No memo is written.
 
-## 6. Design decisions and the evidence behind them
+## 7. Human review
+
+A memo is a starting point, not a decision, so RegPulse marks the ones a person should check first. `pipeline/review.py` flags two cases:
+
+1. **A `covered` verdict whose closest passage sits at distance 1.0 or more.** The judge's known failure is to treat a generic catch-all sentence ("environmental, health and safety, including ... product design") as coverage. Those verdicts come with weak matches.
+2. **Every `uncovered` verdict.** The judge only saw the 10 closest passages, so a claimed gap must be confirmed against the full 10-K.
+
+**Where the 1.0 comes from.** Across both gold sets, the correct `covered` verdicts had distances 0.59, 0.729, 0.837, 0.846 and 1.055; the two wrong ones (button batteries for Apple, Title V permits for Duke) had 1.235 and 1.007. A cut at 1.0 catches both wrong ones and flags one correct one (COPPA). No cut catches both without that false alarm.
+
+**How well it works**, as reported by `python -m eval.run_eval`:
+
+| | Wrong memo verdicts caught | Correct memo verdicts also flagged |
+|---|---|---|
+| Apple gold set | 1 of 1 | 2 of 4 (COPPA by distance; the hearing-aid gap, as every gap is) |
+| Duke gold set | 1 of 1 | 0 of 2 |
+
+The flag is cautious on purpose. Sending a correct memo for a second look costs a reviewer a few minutes; acting on a wrong one means a disclosure decision based on the wrong passage. The threshold was set on the same small gold sets it is measured on, so these hit rates are optimistic until new cases are labeled.
+
+## 8. Design decisions and the evidence behind them
 
 **Decide applicability before coverage.** The first judge answered only "is any passage relevant?", and every "no" became a coverage-gap memo. That produced memos for rules that have nothing to do with Apple, such as a POW/MIA proclamation and EDGAR filing-manual updates: 10 of 13 memos. The judge now returns three verdicts, and its prompt asks "does this materially affect Apple?" **before** "is it covered?". When the prompt only listed the three definitions, the hard BIS export-control case still came back `covered`, because Apple's trade risk factor mentions export controls. Ordering the two questions fixed it ("Apple is not a manufacturer or exporter of these enterprise AI chips") without breaking the real `covered` cases. Memos went from 13 to 5, and every remaining one is for a rule that affects Apple.
 
@@ -189,16 +258,17 @@ A ceremonial presidential proclamation with no abstract. RegPulse falls back to 
 
 **Cron for scheduling.** Cron is built into macOS and needs no long-running process, unlike a Python scheduler library.
 
-## 7. Evaluation
+## 9. Evaluation
 
 Two evaluations run from `eval/run_eval.py`, each against hand-labeled gold sets. Labels are written and committed **before** the pipeline sees a new document, so the git history shows they were not adjusted after the fact.
 
-| Evaluation | Tests | Gold set | Result | Gemini cost |
+| Evaluation | Tests | Apple (`main`) | Duke Energy (`energy`) | Gemini cost |
 |---|---|---|---|---|
-| Judge | Is the 3-way verdict right? | `eval/gold_set.json`, 12 documents (3 covered, 2 uncovered, 7 not applicable) | **11/12** | 0 by default, uses Gemini with `--rerun` |
-| Diff | Administrative or substantive? | `eval/gold_set_diff.json`, 31 documents | **30/31 (96.77%)** | 0 |
+| Judge | Is the 3-way verdict right? | **11/12** (3 covered, 2 uncovered, 7 not applicable) | **10/11** (2 covered, 1 uncovered, 8 not applicable) | 0 by default, uses Gemini with `--rerun` |
+| Diff | Administrative or substantive? | **30/31** | **21/24** | 0 |
+| Review flag | Does it catch the judge's wrong memo verdicts? | 1 of 1 caught | 1 of 1 caught | 0 |
 
-The judge evaluation prints a confusion matrix:
+The Apple confusion matrix:
 
 ```
                          covered       uncovered  not_applicable
@@ -207,20 +277,74 @@ uncovered                      1               1               0
 not_applicable                 0               0               7
 ```
 
-**The two misses, and why they were not "fixed".**
+**Apple misses, and why they were not "fixed".**
 
 - **Judge: button-battery products** (`2023-20333`, CPSC). It applies to AirTag, and the Risk Factors never mention button or coin batteries, so it was labeled `uncovered`. The judge called it `covered`, pointing at a generic catch-all line ("environmental, health and safety, including ... product design and climate change"). This was predicted as a hard case before the run. The impact is small, because both verdicts produce a memo, and the memo itself notes the disclosure is only general. Tuning the prompt against this exact example would make the score meaningless; a fix needs new blind-labeled cases to test against.
 - **Diff: Commission Quorum Requirement** (`2026-20262`). It is SEC housekeeping on its own voting rules, so it was labeled administrative. No phrase in the list catches it, and adding "Quorum" would match only this one document. It reaches the judge, which correctly returns `not_applicable`, so it costs one Gemini call and produces no memo.
+
+**Duke Energy misses and corrections.**
+
+- **Judge: Title V "applicable requirements"** (`2026-19671`). Every Duke plant holds a Title V permit and the Risk Factors only say "a wide variety of environmental licenses, permits", so it was labeled `uncovered`; the judge called it `covered`. It is the same catch-all failure as the Apple button-battery case, on a second company, and the review flag catches it.
+- **Three labels were corrected after the run, openly.** They had been written from document titles. The abstracts showed CSAPR `2026-20191` applies only to Virginia units (the judge's `not_applicable` was right; the label said `uncovered`), and two PHMSA "Standards Update" documents were effective-date confirmations of rules published months earlier, which are housekeeping. Each corrected entry carries a note with the original label. Before correction the scores were judge 10/12 and diff 20/24.
+- **Diff: three one-off housekeeping titles** (an NRC procedure rule, a South Carolina agency name change, an RFS reporting-deadline extension) are missed. Two general Federal Register phrases were added instead ("confirming the effective date", "Compliance Date Extension"), which also removed 13 duplicate memos about pipeline standards confirmations.
 
 **How much to trust these numbers.**
 
 - A perfect score is treated as a prompt to stress-test, not as proof. The judge first scored 10/10 with no `uncovered` example in the gold set at all, which tested nothing about the coverage-gap path. Two blind-labeled `uncovered` cases were added, and one of them failed.
 - The gold set includes deliberately hard cases: BIS license review (topically close to a real risk factor, but not applicable), the CBP customs disclosure (covered, with no tariff vocabulary), and the button-battery rule (generic catch-all text nearby).
-- 12 judge examples is a small set, and 2 of the 7 not-applicable labels are marked borderline in the file. Growing the gold sets with blind-labeled documents is the main evaluation to-do.
+- 12 and 11 judge examples are small sets, with one or two `uncovered` cases each. Several labels are marked borderline or hard in the files. Growing the gold sets with documents labeled blind, from their abstracts, is the main evaluation to-do.
 
 **Evaluations fail loudly.** If any gold document is missing from the data, or was judged before the 3-way judge existed, the evaluation lists every affected document and exits with code 1. It never prints a score over a partial or outdated set. This came from a real bug: a damaged data file once made the diff evaluation print 62.96% over skipped examples.
 
-## 8. Tech stack
+## 10. Risk notes
+
+The failure modes found so far, and what handles each:
+
+| Risk | Seen where | What handles it |
+|---|---|---|
+| The judge treats a generic catch-all sentence as coverage | Apple button batteries, Duke Title V | Review flag (distance ≥ 1.0); fixing the prompt needs new blind-labeled cases first |
+| The judge only sees the 10 closest passages, so a gap may be covered elsewhere | Every `uncovered` verdict | Review flag on every gap; the memo says only the closest passages were checked |
+| Keyword diff misses one-off housekeeping titles | SEC Quorum rule; NRC procedure, SC name change, RFS deadline | They reach the judge, which returns `not_applicable` (one Gemini call, no memo) |
+| Verdicts flipped between runs on borderline cases | CBP customs disclosure (Apple) | `temperature=0` for the judge and memos |
+| Documents with no abstract crashed the pipeline | 35% of an unlabeled sample | Title-only fallback |
+| Gold labels written from titles can be wrong | 3 Duke labels | Label from the abstract; corrections carry a note with the original label |
+| A memo can overstate impact or extrapolate beyond the abstract | Read by hand | Human review; memo quality is not scored |
+| Cron misses runs when the Mac is asleep or off | Several mornings | Known limitation; a cloud scheduler in production |
+| Small gold sets give wide uncertainty | Both versions | Stated next to every score |
+
+Other limitations:
+
+- **Fetching covers SEC rules only.** The 7 non-SEC documents (FTC, FCC, CPSC, CBP, BIS and two presidential proclamations) were added by hand for evaluation.
+- **One company per branch.** `config.py` holds one company's settings; the two versions live on separate branches.
+- **The 10-K is not refreshed automatically.** `fetch_sec_edgar.py` reuses the local copy once it exists, so a new annual filing has to be fetched deliberately.
+- **Retrieval is text-only.** The vector store holds Risk Factors as plain chunks with no page metadata.
+
+## 11. How this runs in production
+
+RegPulse is built on free and local tools. Each piece maps onto a managed equivalent:
+
+| Here | In production | Why it maps cleanly |
+|---|---|---|
+| Gemini API, `pipeline/gemini_client.py` | AWS Bedrock or Azure OpenAI | Every model call goes through one client with retry and backoff, so the provider changes in one file |
+| Local Chroma collection | A managed vector store (for example OpenSearch, pgvector or Azure AI Search) | Retrieval is one function, `query_collection`, called with a query and a count |
+| cron on a Mac | A scheduled cloud job (for example EventBridge or Azure Functions on a timer) | The job is one script, `scripts/run_pipeline.sh`: fetch, then the graph |
+| JSON files keyed by `document_number` | A database table with that key | Every save already merges by key and is safe to re-run |
+| Streamlit on localhost | An internal web app behind single sign-on | The dashboard only reads `graph_results.json` |
+| LangSmith tracing | Stays | Each regulation's run is already traced node by node |
+| GitHub Actions evals | Stays, plus a scheduled `--rerun` against the live model | Catches model or prompt drift, not only code changes |
+
+## 12. The agent-boss loop
+
+RegPulse is organised the way a person would manage a team of agents: frame the job, hand off pieces, check the work, then put it to use.
+
+| Step | In RegPulse |
+|---|---|
+| **Frame** the problem and the metric | Which new rules make a company's disclosed risks outdated or incomplete? Measured by verdict accuracy on blind gold sets, and by how many memos reach a reviewer for rules that do not apply (13 before the three-way judge, 5 after, for Apple). |
+| **Delegate** to agents | Fetch, diff, classify, retrieve and judge, and memo nodes in a LangGraph graph, one run per regulation |
+| **Verify** the work | The LLM judge's applicability step, two evaluations with confusion matrices in CI, labels committed before runs, and the human-review flag |
+| **Integrate** the results | Memos and flags in the dashboard, scheduled weekday runs, `Data:` commits so the evaluated data is always the committed data |
+
+## 13. Tech stack
 
 | Purpose | Tool |
 |---|---|
@@ -236,7 +360,7 @@ not_applicable                 0               0               7
 | Data sources | Federal Register API (no key needed), SEC EDGAR |
 | Visual retrieval (experimental) | ColQwen2, `vidore/colqwen2-v1.0-hf` |
 
-## 9. Project structure
+## 14. Project structure
 
 ```
 Regpulse/
@@ -253,6 +377,8 @@ Regpulse/
 │   ├── classify_agent.py            # compliance-domain tagging
 │   ├── retrieval_agent.py           # retrieval plus the 3-way Gemini judge
 │   ├── impact_agent.py              # memo generation and memo routing
+│   ├── gemini_client.py             # one Gemini client with retry on 503 and 429
+│   ├── review.py                    # human-review flag
 │   ├── graph.py                     # LangGraph workflow
 │   └── run_graph.py                 # batch runner
 ├── vectorstore/
@@ -275,7 +401,7 @@ Regpulse/
 
 The `eval/` folder also holds a few one-off analysis scripts used during development (ColQwen2 comparisons, an unlabeled smoke test, a Federal Register keyword browser for finding gold-set candidates).
 
-## 10. Getting started
+## 15. Getting started
 
 **Requirements:** a recent Python 3, a Gemini API key, and about 2 GB of disk for the virtual environment and downloaded models. Developed on macOS (Apple Silicon).
 
@@ -311,7 +437,7 @@ The first run downloads the Hugging Face models (the zero-shot model is over 1 G
 
 **Optional:** the ColQwen2 visual-retrieval experiment needs a few extra packages. Install them with `pip install -r requirements-colpali.txt`, then run `playwright install chromium`. The main pipeline, dashboard and evaluations do not need them.
 
-## 11. Running RegPulse
+## 16. Running RegPulse
 
 Run everything from the project root, as modules.
 
@@ -338,7 +464,7 @@ python -m eval.run_eval --rerun      # re-run the judge on the gold set (uses Ge
 python -m eval.run_eval --diff       # diff evaluation (0 Gemini calls)
 ```
 
-## 12. Scheduling
+## 17. Scheduling
 
 Cron runs the pipeline on weekdays at 11:30:
 
@@ -364,31 +490,19 @@ ls -t logs | head -3 && cat logs/cron.log
 
 A healthy run leaves a `pipeline_<date>_11-30-...` log and an empty `cron.log`.
 
-## 13. Cost
+## 18. Cost
 
 A normal scheduled run makes **0 Gemini calls**: it skips every document already processed. A new substantive rule costs one call to judge it, plus one to write a memo if it is covered or uncovered. A not-applicable rule costs only the judge call.
 
 The Gemini free tier proved too small for this project (about 20 requests per day per model, with per-minute limits as well), so it runs on a billed account. Everything else, including embeddings, the vector store, and zero-shot classification, runs locally for free.
 
-## 14. Known limitations
-
-- **The judge can mistake a generic catch-all for coverage.** One sentence listing broad categories of law ("environmental, health and safety, including ... product design") led the judge to call the button-battery rule `covered` (see Evaluation).
-- **The judge sees only the 10 closest chunks**, about 7% of the Risk Factors. An `uncovered` verdict means none of those passages discusses the risk, not that no line of the 10-K does. The coverage-gap memo says so.
-- **The diff step is keyword matching.** It misses one-off housekeeping titles such as the Commission Quorum Requirement. Those reach the judge, which returns `not_applicable`, so the cost is one Gemini call, not a wrong memo.
-- **The evaluations are small.** 12 judge examples and 31 diff examples give wide uncertainty, and 2 judge labels are marked borderline.
-- **Fetching covers SEC rules only.** The 7 non-SEC documents (FTC, FCC, CPSC, CBP, BIS and two presidential proclamations) were added by hand for evaluation.
-- **One company at a time.** `config.py` holds one company's settings.
-- **The 10-K is not refreshed automatically.** `fetch_sec_edgar.py` reuses the local copy once it exists, so a new annual filing has to be fetched deliberately.
-- **Cron needs the machine awake** at run time.
-- **Retrieval is text-only.** The vector store holds Risk Factors as plain chunks with no page metadata.
-- **Memo quality is not scored.** The evaluations check verdicts, not the wording of memos, which are read by hand. Memos are drafted by an LLM and can overreach or extrapolate beyond the regulation's abstract. Treat them as starting points for a human reviewer, as each memo itself says.
-
-## 15. Lessons learned
+## 19. Lessons learned
 
 - **Check what the evaluation actually reads.** The judge evaluation once scored a stale side file instead of the pipeline's real output, so a perfect score said nothing about the system in use.
 - **"Not relevant" is not the same as "missing".** Treating every non-match as a coverage gap filled the dashboard with memos about rules that do not apply.
 - **A 100% score is a prompt to stress-test.** Ask what the check could not have caught. Here, an empty row in the confusion matrix meant a whole path was untested.
 - **Do not tune on the example you are grading.** A known miss, explained, is worth more than a score bought by fitting the prompt to one case.
+- **Label from the abstract, never the title.** Three Duke labels written from titles were wrong; one of them was a case the judge got right.
 - **Check where every data field came from.** Two abstracts in the corpus were paraphrases, not official text, and the judge had been reasoning over them.
 - **Merge by key, never overwrite.** Three overwrite-style saves once silently shrank data files.
 - **Fail loudly, not partially.** A score printed over a partial set is worse than an error.
@@ -400,7 +514,7 @@ The Gemini free tier proved too small for this project (about 20 requests per da
 - **Cron has its own environment and its own OS permissions.**
 - **Verify the notes against the files.** Project notes go stale; always check real state.
 
-## 16. Roadmap
+## 20. Roadmap
 
 - [x] Ingestion, text RAG, diff and classification agents
 - [x] LLM-as-judge retrieval and memo generation
@@ -411,13 +525,15 @@ The Gemini free tier proved too small for this project (about 20 requests per da
 - [x] CI: run the evaluations on every change (GitHub Actions)
 - [x] 3-way judge verdict (covered / uncovered / not applicable)
 - [x] Company settings in one config file
-- [ ] Energy-utility version on its own branch
-- [ ] Human-review flag for borderline verdicts
+- [x] Energy-utility version on its own branch (Duke Energy)
+- [x] Human-review flag for borderline verdicts
+- [ ] Approve or reject buttons that save review decisions
+- [ ] A prompt rule for generic catch-all text, tested on new blind-labeled cases
 - [ ] Larger gold sets, labeled blind before running the pipeline
 - [ ] Broader fetching beyond SEC rules
 - [ ] Docker packaging (optional)
 - [ ] Revisit visual retrieval for scanned or table-heavy filings
 
-## 17. License
+## 21. License
 
 MIT. See [LICENSE](LICENSE).
