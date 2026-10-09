@@ -53,7 +53,7 @@
     "publication_date": "2026-05-21",
     "document_number": "2026-10132",
     "html_url": "https://www.federalregister.gov/documents/2026/05/21/2026-10132/rescission-of-policy-regarding-denials-in-settlements-of-enforcement-actions",
-    "category": "administrative"
+    "category": "substantive"
   },
   {
     "title": "Technical Amendments to Rule 610(e) of Regulation NMS and to Delegation of Authority To Grant or Deny Exemptions From Rule 610 of Regulation NMS",
@@ -168,19 +168,19 @@
     "category": "substantive"
   },
   {
-    "abstract": "[Claude-paraphrased, not official API metadata] Final rule from the Bureau of Industry and Security (BIS), Department of Commerce, revising the license review policy for exports of certain advanced computing semiconductors (including Nvidia H200 and AMD MI325X chips and their equivalents) to end users in China and Macau, changing the standard from a presumption of denial to case-by-case review, subject to conditions including U.S. supply-sufficiency certification and independent third-party testing.",
-    "document_number": "2026-00789",
-    "html_url": "https://federalregister.gov/d/2026-00789",
-    "publication_date": "2026-01-15",
     "title": "Revision to License Review Policy for Advanced Computing Commodities",
+    "abstract": "The Bureau of Industry and Security (BIS) is revising its license review policy for exports of certain semiconductors to China and Macau--changing it from a presumption of denial to a case-by-case review. The semiconductors covered by this rule are the Nvidia H200 and its equivalents, as well as less advanced chips--provided that (1) the semiconductors are commercially available in the United States at the time of publication of this rule and (2) the exporter certifies that: there is sufficient supply of this product in the United States; production of this product for exports to China will not divert global foundry capacity for similar or more advanced products for end users in the United States; the recipient has demonstrated sufficient security procedures; and the item undergoes independent, third-party testing in the United States to verify its performance specifications.",
+    "publication_date": "2026-01-15",
+    "document_number": "2026-00789",
+    "html_url": "https://www.federalregister.gov/documents/2026/01/15/2026-00789/revision-to-license-review-policy-for-advanced-computing-commodities",
     "category": "substantive"
   },
   {
-    "abstract": "[Claude-paraphrased, not official API metadata] Proposed rule from the Securities and Exchange Commission intended to facilitate capital formation in the public securities markets by significantly expanding Form S-3 shelf-registration eligibility, extending enhanced registration and communication benefits historically reserved for well-known seasoned issuers to a broader set of listed companies, modernizing Form S-1 incorporation-by-reference, and preempting state blue-sky registration requirements for registered offerings.",
+    "title": "Registered Offering Reform",
+    "abstract": "The Securities and Exchange Commission (\"Commission\") is proposing amendments that are intended to facilitate capital formation in the public securities markets. Specifically, the proposed amendments would make Form S-3 and the ability to conduct shelf offerings available to significantly more issuers, extend certain benefits currently reserved for \"well-known seasoned issuers\" to a broader set of issuers, and modernize Form S-1 by expanding the ability to incorporate information by reference into that form. The proposed amendments also would make conforming changes to the registration, communication, and offering process for certain business development companies and registered closed-end investment companies that register securities on Form N-2. We also are proposing to amend the communication rules to permit broad-based advertising for certain insurance products. In addition, we are proposing certain other amendments that are intended to modernize certain rules. Finally, to mitigate the costs and complexity of conducting a registered offering, the proposed amendments would preempt State securities law registration and qualification requirements for all registered offerings.",
+    "publication_date": "2026-05-26",
     "document_number": "2026-10373",
     "html_url": "https://www.federalregister.gov/documents/2026/05/26/2026-10373/registered-offering-reform",
-    "publication_date": "2026-05-26",
-    "title": "Registered Offering Reform",
     "category": "substantive"
   },
   {
@@ -213,7 +213,7 @@
     "publication_date": "2026-04-16",
     "document_number": "2026-07474",
     "html_url": "https://www.federalregister.gov/documents/2026/04/16/2026-07474/adoption-of-updated-edgar-filer-manual",
-    "category": "substantive"
+    "category": "administrative"
   },
   {
     "title": "Commission Quorum Requirement",
@@ -229,6 +229,6 @@
     "publication_date": "2026-10-06",
     "document_number": "2026-20461",
     "html_url": "https://www.federalregister.gov/documents/2026/10/06/2026-20461/adoption-of-updated-edgar-filer-manual",
-    "category": "substantive"
+    "category": "administrative"
   }
 ]
