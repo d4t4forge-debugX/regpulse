@@ -21,8 +21,12 @@ else:
     filtered_memos = [m for m in memos if m["memo_type"] == filter_choice]
 
 st.write(f"Showing {len(filtered_memos)} of {len(memos)} memos")
-st.caption(f"{len(results) - len(memos)} administrative regulations were screened out before reaching this stage")
-
+administrative_count = sum(1 for r in results if r["category"] == "administrative")
+not_applicable_count = sum(1 for r in results if r.get("verdict") == "not_applicable")
+st.caption(
+    f"{administrative_count} regulations were screened out as administrative, "
+    f"and {not_applicable_count} were judged not applicable to Apple, so neither got a memo."
+)
 table_data = [
     {
         "Title": memo["regulation_title"],
