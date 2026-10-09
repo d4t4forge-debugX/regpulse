@@ -6,7 +6,7 @@ GOLD_FILE = "eval/gold_set.json"
 GOLD_DIFF_FILE = "eval/gold_set_diff.json"
 DOCS_FILE = "federal_register_docs.json"
 DOMAINS_FILE = "federal_register_domains.json"
-RETRIEVAL_FILE = "federal_register_retrieval.json"
+RETRIEVAL_FILE = "graph_results.json"
 
 
 def load_gold(filename=GOLD_FILE):
