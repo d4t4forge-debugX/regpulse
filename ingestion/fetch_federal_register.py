@@ -1,7 +1,7 @@
 import requests
 import json
 import os
-from config import FEDERAL_REGISTER_AGENCIES
+from config import FEDERAL_REGISTER_AGENCIES, FETCH_DAYS_BACK
 
 def save_documents(documents, filename="federal_register_docs.json"):
     """Merge newly fetched documents into the existing file, keyed by document_number,
@@ -39,14 +39,14 @@ def deduplicate_documents(documents):
     deduped = {doc["document_number"]: doc for doc in documents}
     return list(deduped.values())
 
-def fetch_recent_sec_rules(per_page=100, days_back=365):
+def fetch_recent_rules(per_page=100, days_back=365):
     from datetime import date, timedelta
 
     url = "https://www.federalregister.gov/api/v1/documents.json"
     start_date = (date.today() - timedelta(days=days_back)).isoformat()
 
     params = {
-           "conditions[agencies][]": FEDERAL_REGISTER_AGENCIES,
+        "conditions[agencies][]": FEDERAL_REGISTER_AGENCIES,
         "conditions[type][]": "RULE",
         "conditions[publication_date][gte]": start_date,
         "order": "newest",
@@ -75,7 +75,7 @@ def fetch_recent_sec_rules(per_page=100, days_back=365):
     return {"count": total_count, "results": all_results}
 
 if __name__ == "__main__":
-    data = fetch_recent_sec_rules(days_back=365)
+    data = fetch_recent_rules(days_back=FETCH_DAYS_BACK)
     print(f"Total matches: {data['count']}")
     documents = extract_relevant_fields(data)
     documents = deduplicate_documents(documents)

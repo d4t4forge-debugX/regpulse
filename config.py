@@ -14,15 +14,15 @@ GEMINI_MODEL = "gemini-3.5-flash"
 
 # Zero-shot domain labels used by classify_agent
 DOMAIN_LABELS = [
-    "Financial reporting and disclosure",
-    "Corporate governance",
-    "Data privacy and cybersecurity",
-    "Digital assets and cryptocurrency",
-    "International operations and trade",
-    "Supply chain and operations",
-    "Market and trading regulation",
-    "Litigation and enforcement",
-    "Recordkeeping and filing systems",
+    "Air quality and emissions",
+    "Climate and carbon regulation",
+    "Nuclear safety and licensing",
+    "Gas and pipeline safety",
+    "Hazardous materials and waste",
+    "Grid reliability and power markets",
+    "Energy efficiency and appliance standards",
+    "Chemical and pesticide regulation",
+    "Recordkeeping, filings and agency procedure",
 ]
 
 
@@ -42,4 +42,13 @@ TEN_K_PAGE_NOISE_PATTERN = r"\b\d{1,3} (?:RISK FACTORS|UNRESOLVED STAFF COMMENTS
 CHROMA_COLLECTION = "duke_risk_factors"
 
 # Federal Register agencies whose final rules are fetched (API slugs)
-FEDERAL_REGISTER_AGENCIES = ["securities-and-exchange-commission"]
+FEDERAL_REGISTER_AGENCIES = [
+    "federal-energy-regulatory-commission",
+    "environmental-protection-agency",
+    "nuclear-regulatory-commission",
+    "energy-department",
+    "pipeline-and-hazardous-materials-safety-administration",
+]
+
+# How far back the Federal Register fetch looks, in days
+FETCH_DAYS_BACK = 90
