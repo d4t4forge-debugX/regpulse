@@ -54,7 +54,8 @@ def fetch_recent_sec_rules(per_page=100, days_back=365):
     }
 
     all_results = []
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=30)
+    response.raise_for_status()
     data = response.json()
     total_count = data["count"]
     all_results.extend(data["results"])
@@ -65,7 +66,8 @@ def fetch_recent_sec_rules(per_page=100, days_back=365):
             print("Warning: hit the Federal Register API's 2000-result pagination cap. "
                   "Returning partial results — narrow the date range to get the rest.")
             break
-        response = requests.get(next_page_url)
+        response = requests.get(next_page_url, timeout=30)
+        response.raise_for_status()
         data = response.json()
         all_results.extend(data["results"])
         next_page_url = data.get("next_page_url")
