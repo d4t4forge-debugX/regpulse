@@ -1,18 +1,8 @@
 import json
 import os
 from transformers import pipeline
+from config import DOMAIN_LABELS
 
-DOMAIN_LABELS = [
-    "Financial reporting and disclosure",
-    "Corporate governance",
-    "Data privacy and cybersecurity",
-    "Digital assets and cryptocurrency",
-    "International operations and trade",
-    "Supply chain and operations",
-    "Market and trading regulation",
-    "Litigation and enforcement",
-    "Recordkeeping and filing systems",
-]
 
 def load_substantive_documents(filename="federal_register_classified.json"):
     with open(filename, "r") as f:

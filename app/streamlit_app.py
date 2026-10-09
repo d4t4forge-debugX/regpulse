@@ -1,5 +1,14 @@
-import streamlit as st
 import json
+import sys
+from pathlib import Path
+
+import streamlit as st
+
+# Streamlit puts app/ (this file's folder) on the import path, not the project root,
+# so add the root explicitly to be able to import config.py from there.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from config import COMPANY_NAME
 
 st.title("RegPulse — Compliance Memos")
 
@@ -25,7 +34,7 @@ administrative_count = sum(1 for r in results if r["category"] == "administrativ
 not_applicable_count = sum(1 for r in results if r.get("verdict") == "not_applicable")
 st.caption(
     f"{administrative_count} regulations were screened out as administrative, "
-    f"and {not_applicable_count} were judged not applicable to Apple, so neither got a memo."
+    f"and {not_applicable_count} were judged not applicable to {COMPANY_NAME}, so neither got a memo."
 )
 table_data = [
     {

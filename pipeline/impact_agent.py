@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import os
 import time
 from google import genai
+from config import COMPANY_NAME, GEMINI_MODEL
 
 load_dotenv()
 _client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
@@ -10,7 +11,7 @@ def call_gemini_with_retry(prompt, max_retries=3):
     for attempt in range(max_retries):
         try:
             response = _client.models.generate_content(
-                model="gemini-3.5-flash",
+                model=GEMINI_MODEL,
                 contents=prompt
             )
             return response
@@ -42,9 +43,9 @@ def build_coverage_gap_shell(doc):
         "memo_text": None  # filled in by the LLM step later
     }
 def generate_coverage_gap_memo_text(shell):
-    prompt = f"""You are assisting a compliance team at Apple. A new Federal Register regulation was published. An automated review judged that it materially affects Apple, and none of the most similar passages retrieved from Apple's 10-K Risk Factors section discusses it.
+    prompt = f"""You are assisting a compliance team at {COMPANY_NAME}. A new Federal Register regulation was published. An automated review judged that it materially affects {COMPANY_NAME}, and none of the most similar passages retrieved from {COMPANY_NAME}'s 10-K Risk Factors section discusses it.
 
-    Why it was judged to affect Apple: {shell['judge_reasoning']}
+    Why it was judged to affect {COMPANY_NAME}: {shell['judge_reasoning']}
 
 Regulation title: {shell['regulation_title']}
 Regulation abstract: {shell['regulation_abstract']}
@@ -110,7 +111,7 @@ def build_outdated_shell(doc):
     }
 
 def generate_outdated_memo_text(shell):
-    prompt = f"""You are assisting a compliance team at Apple. A new SEC/Federal Register regulation was published, and an existing disclosure in Apple's 10-K Risk Factors section may now be outdated because of it.
+    prompt = f"""You are assisting a compliance team at {COMPANY_NAME}. A new SEC/Federal Register regulation was published, and an existing disclosure in {COMPANY_NAME}'s 10-K Risk Factors section may now be outdated because of it.
 
 Regulation title: {shell['regulation_title']}
 Regulation abstract: {shell['regulation_abstract']}
