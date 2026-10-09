@@ -42,7 +42,7 @@ def call_gemini_with_retry(prompt, model="gemini-3.5-flash", max_retries=5, temp
                 time.sleep(wait)
             else:
                 raise
-
+VERDICTS = ("covered", "uncovered", "not_applicable")
 def judge_relevance_llm(doc, matches, model="gemini-3.5-flash"):
     n = len(matches)
     chunks_text = "\n\n".join(
@@ -54,7 +54,7 @@ def judge_relevance_llm(doc, matches, model="gemini-3.5-flash"):
 
     abstract_text = doc.get("abstract") or "(no abstract available for this document)"
 
-    prompt = f"""You are assisting a compliance team at Apple in reviewing whether a new regulation makes an existing Risk Factors disclosure outdated.
+    prompt = f"""You are assisting a compliance team at Apple in reviewing how a new regulation relates to Apple's existing 10-K Risk Factors disclosures.
 
 Regulation title: {doc['title']}
 Regulation abstract: {abstract_text}
@@ -63,10 +63,14 @@ Below are the top {n} candidate excerpts retrieved from Apple's 10-K Risk Factor
 
 {chunks_text}
 
-Judge whether any of these excerpts is genuinely, substantively relevant to the regulation above -- meaning it discusses the same specific risk area, not just a loosely related topic.
+Decide in two steps:
 
+Step 1 -- Does this regulation materially affect Apple's own business, operations, or legal obligations? A regulation that targets other companies or industries, kinds of products or issuers that Apple is not, government-internal matters, or ceremonial matters does NOT materially affect Apple, even if Apple's Risk Factors discuss the same general topic. If it does not, the verdict is "not_applicable" and you stop here.
+
+Step 2 -- Only if it does affect Apple: if at least one excerpt discusses that specific risk area, the verdict is "covered" (that disclosure may need updating); if none does, the verdict is "uncovered".
 Respond with ONLY a JSON object, no other text, no markdown code fences, in exactly this format:
-{{"is_relevant": true or false, "relevant_chunk_number": {valid_numbers}, or null, "reasoning": "one sentence explanation"}}"""
+{{"verdict": "covered" or "uncovered" or "not_applicable", "relevant_chunk_number": {valid_numbers}, or null, "reasoning": "one sentence explanation"}}
+Give a relevant_chunk_number only when the verdict is "covered"; otherwise use null."""
 
     response = call_gemini_with_retry(prompt, model=model)
 
@@ -75,19 +79,22 @@ Respond with ONLY a JSON object, no other text, no markdown code fences, in exac
 
     return json.loads(raw_text)
 
-
 def judge_document(doc, collection, model):
     """Retrieve candidate chunks for one regulation, judge them, and record the verdict on doc."""
     matches = retrieve_for_regulation(collection, model, doc)
-    verdict = judge_relevance_llm(doc, matches)
+    result = judge_relevance_llm(doc, matches)
 
-    doc["has_relevant_match"] = verdict["is_relevant"]
-    doc["relevant_chunk_number"] = verdict["relevant_chunk_number"]
-    doc["judge_reasoning"] = verdict["reasoning"]
+    if result["verdict"] not in VERDICTS:
+        raise ValueError(f"Judge returned an unknown verdict: {result['verdict']!r}")
+
+    doc["verdict"] = result["verdict"]
+    doc["has_relevant_match"] = result["verdict"] == "covered"
+    doc["relevant_chunk_number"] = result["relevant_chunk_number"]
+    doc["judge_reasoning"] = result["reasoning"]
     doc["best_distance"] = round(min(distance for text, distance in matches), 3)
 
-    if verdict["is_relevant"] and verdict["relevant_chunk_number"]:
-        doc["relevant_chunk_text"] = matches[verdict["relevant_chunk_number"] - 1][0]
+    if doc["has_relevant_match"] and result["relevant_chunk_number"]:
+        doc["relevant_chunk_text"] = matches[result["relevant_chunk_number"] - 1][0]
 
     return doc
 
