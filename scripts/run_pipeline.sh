@@ -14,12 +14,6 @@ mkdir -p logs
   echo "--- Fetching new Federal Register docs ---"
   "$VENV_PYTHON" -m ingestion.fetch_federal_register
 
-  echo "--- Diff (administrative vs substantive) ---"
-  "$VENV_PYTHON" -m pipeline.diff_agent
-
-  echo "--- Classify (domain tagging) ---"
-  "$VENV_PYTHON" -m pipeline.classify_agent
-
   echo "--- Running graph (retrieve, judge, memo) ---"
   "$VENV_PYTHON" -m pipeline.run_graph
 
