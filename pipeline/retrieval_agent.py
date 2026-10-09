@@ -1,10 +1,10 @@
 import json
-import time
-import sys
-from sentence_transformers import SentenceTransformer
-from vectorstore.chroma_store import get_collection, query_collection
-from config import COMPANY_NAME, GEMINI_MODEL
 
+from config import COMPANY_NAME, GEMINI_MODEL
+from pipeline.gemini_client import call_gemini_with_retry
+from vectorstore.chroma_store import query_collection
+
+VERDICTS = ("covered", "uncovered", "not_applicable")
 
 
 def retrieve_for_regulation(collection, model, doc, n_results=10):
@@ -13,33 +13,6 @@ def retrieve_for_regulation(collection, model, doc, n_results=10):
     return query_collection(collection, model, query_text, n_results=n_results, include_distances=True)
 
 
-
-
-from dotenv import load_dotenv
-import os
-from google import genai
-from google.genai import types
-
-load_dotenv()
-_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-
-def call_gemini_with_retry(prompt, model=GEMINI_MODEL, max_retries=5, temperature=0):
-    for attempt in range(max_retries):
-        try:
-            response = _client.models.generate_content(
-                model=model,
-                contents=prompt,
-                config=types.GenerateContentConfig(temperature=temperature)
-            )
-            return response
-        except Exception as e:
-            if "503" in str(e) and attempt < max_retries - 1:
-                wait = 15 * (attempt + 1)
-                print(f"  503 error, retrying in {wait}s...")
-                time.sleep(wait)
-            else:
-                raise
-VERDICTS = ("covered", "uncovered", "not_applicable")
 def judge_relevance_llm(doc, matches, model=GEMINI_MODEL):
     n = len(matches)
     chunks_text = "\n\n".join(
@@ -69,12 +42,17 @@ Respond with ONLY a JSON object, no other text, no markdown code fences, in exac
 {{"verdict": "covered" or "uncovered" or "not_applicable", "relevant_chunk_number": {valid_numbers}, or null, "reasoning": "one sentence explanation"}}
 Give a relevant_chunk_number only when the verdict is "covered"; otherwise use null."""
 
-    response = call_gemini_with_retry(prompt, model=model)
+    # Ask up to twice: a reply that is not valid JSON is usually a one-off formatting slip
+    for attempt in range(2):
+        response = call_gemini_with_retry(prompt, model=model)
+        raw_text = (response.text or "").strip()
+        raw_text = raw_text.replace("```json", "").replace("```", "").strip()
+        try:
+            return json.loads(raw_text)
+        except json.JSONDecodeError:
+            print(f"  Judge reply was not valid JSON (attempt {attempt + 1} of 2): {raw_text[:200]!r}")
+    raise ValueError(f"Judge returned invalid JSON twice for {doc['document_number']}")
 
-    raw_text = response.text.strip()
-    raw_text = raw_text.replace("```json", "").replace("```", "").strip()
-
-    return json.loads(raw_text)
 
 def judge_document(doc, collection, model):
     """Retrieve candidate chunks for one regulation, judge them, and record the verdict on doc."""
@@ -94,5 +72,3 @@ def judge_document(doc, collection, model):
         doc["relevant_chunk_text"] = matches[result["relevant_chunk_number"] - 1][0]
 
     return doc
-
-

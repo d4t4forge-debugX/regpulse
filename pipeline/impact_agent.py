@@ -1,27 +1,6 @@
-from dotenv import load_dotenv
-import os
-import time
-from google import genai
-from config import COMPANY_NAME, GEMINI_MODEL
+from config import COMPANY_NAME
+from pipeline.gemini_client import call_gemini_with_retry
 
-load_dotenv()
-_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-
-def call_gemini_with_retry(prompt, max_retries=3):
-    for attempt in range(max_retries):
-        try:
-            response = _client.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt
-            )
-            return response
-        except Exception as e:
-            if "503" in str(e) and attempt < max_retries - 1:
-                wait = 10 * (attempt + 1)
-                print(f"  503 error, retrying in {wait}s...")
-                time.sleep(wait)
-            else:
-                raise
 
 def select_memo_type(doc):
     """Map the judge's verdict to a memo route: outdated, coverage_gap, or none."""
@@ -30,6 +9,7 @@ def select_memo_type(doc):
     if doc["verdict"] == "uncovered":
         return "coverage_gap"
     return "none"
+
 
 def build_coverage_gap_shell(doc):
     return {
@@ -42,10 +22,12 @@ def build_coverage_gap_shell(doc):
         "judge_reasoning": doc["judge_reasoning"],
         "memo_text": None  # filled in by the LLM step later
     }
+
+
 def generate_coverage_gap_memo_text(shell):
     prompt = f"""You are assisting a compliance team at {COMPANY_NAME}. A new Federal Register regulation was published. An automated review judged that it materially affects {COMPANY_NAME}, and none of the most similar passages retrieved from {COMPANY_NAME}'s 10-K Risk Factors section discusses it.
 
-    Why it was judged to affect {COMPANY_NAME}: {shell['judge_reasoning']}
+Why it was judged to affect {COMPANY_NAME}: {shell['judge_reasoning']}
 
 Regulation title: {shell['regulation_title']}
 Regulation abstract: {shell['regulation_abstract']}
@@ -60,7 +42,6 @@ Do not present this as final compliance or legal advice — frame it as a starti
     return response.text
 
 
-
 def build_outdated_shell(doc):
     return {
         "regulation_title": doc["title"],
@@ -73,6 +54,7 @@ def build_outdated_shell(doc):
         "judge_reasoning": doc["judge_reasoning"],
         "memo_text": None  # filled in by the LLM step later
     }
+
 
 def generate_outdated_memo_text(shell):
     prompt = f"""You are assisting a compliance team at {COMPANY_NAME}. A new SEC/Federal Register regulation was published, and an existing disclosure in {COMPANY_NAME}'s 10-K Risk Factors section may now be outdated because of it.
@@ -93,4 +75,3 @@ Do not present this as final compliance or legal advice — frame it as a starti
 
     response = call_gemini_with_retry(prompt)
     return response.text
-
