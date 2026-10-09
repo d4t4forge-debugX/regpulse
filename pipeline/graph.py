@@ -32,6 +32,7 @@ class RegulationState(TypedDict, total=False):
     domain_score: float
     domain_confidence_gap: float
     # Added by the judge node
+    verdict: str
     has_relevant_match: bool
     relevant_chunk_number: Optional[int]
     judge_reasoning: str
@@ -42,6 +43,7 @@ class RegulationState(TypedDict, total=False):
 
 
 JUDGE_FIELDS = [
+    "verdict",
     "has_relevant_match",
     "relevant_chunk_number",
     "judge_reasoning",
@@ -95,11 +97,11 @@ def build_graph(classifier, model, collection):
         {"substantive": "classify", "administrative": END},
     )
     graph.add_edge("classify", "judge")
-    # select_memo_type (from impact_agent.py) returns "outdated" or "coverage_gap"
+    # select_memo_type (from impact_agent.py) returns "outdated", "coverage_gap", or "none"
     graph.add_conditional_edges(
         "judge",
         select_memo_type,
-        {"outdated": "outdated_memo", "coverage_gap": "coverage_gap_memo"},
+        {"outdated": "outdated_memo", "coverage_gap": "coverage_gap_memo", "none": END},
     )
     graph.add_edge("outdated_memo", END)
     graph.add_edge("coverage_gap_memo", END)
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     test_docs = [
         administrative_doc,        # should stop right after the diff node
         by_id["2025-05904"],       # COPPA: known positive, should end with an outdated memo
-        by_id["2026-19334"],       # POW/MIA proclamation: known negative, should end with a coverage_gap memo
+        by_id["2026-19334"],  # POW/MIA proclamation: not_applicable, should end with no memo
     ]
 
     for doc in test_docs:

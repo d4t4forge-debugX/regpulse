@@ -23,10 +23,12 @@ def call_gemini_with_retry(prompt, max_retries=3):
                 raise
 
 def select_memo_type(doc):
-    if doc["has_relevant_match"]:
+    """Map the judge's verdict to a memo route: outdated, coverage_gap, or none."""
+    if doc["verdict"] == "covered":
         return "outdated"
-    else:
+    if doc["verdict"] == "uncovered":
         return "coverage_gap"
+    return "none"
 
 def build_coverage_gap_shell(doc):
     return {
@@ -40,13 +42,15 @@ def build_coverage_gap_shell(doc):
         "memo_text": None  # filled in by the LLM step later
     }
 def generate_coverage_gap_memo_text(shell):
-    prompt = f"""You are assisting a compliance team at Apple. A new SEC/Federal Register regulation was published, and no existing disclosure in Apple's 10-K Risk Factors section addresses it.
+    prompt = f"""You are assisting a compliance team at Apple. A new Federal Register regulation was published. An automated review judged that it materially affects Apple, and none of the most similar passages retrieved from Apple's 10-K Risk Factors section discusses it.
+
+    Why it was judged to affect Apple: {shell['judge_reasoning']}
 
 Regulation title: {shell['regulation_title']}
 Regulation abstract: {shell['regulation_abstract']}
 
 Write a short memo (3-5 sentences) that:
-1. States plainly that no existing Risk Factors disclosure covers this regulation.
+1. States that none of the reviewed Risk Factors passages appears to cover this regulation (the review checked the closest-matching passages, not every line of the 10-K).
 2. Suggests, at a high level, what a new or updated disclosure might need to address, based on the regulation's content.
 
 Do not present this as final compliance or legal advice — frame it as a starting point for the compliance team to evaluate."""
