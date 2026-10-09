@@ -9,40 +9,50 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import COMPANY_NAME
+from pipeline.review import review_reason
 
 st.title("RegPulse — Compliance Memos")
 
 with open("graph_results.json") as f:
     results = json.load(f)
 
-# Only substantive regulations reach the judge and get a memo; administrative
-# ones have no "memo" key at all, so this line both selects and unwraps them.
-memos = [r["memo"] for r in results if r.get("memo")]
+# Only covered and uncovered regulations get a memo. Keep each memo together with the
+# reason (if any) it needs a human check, which comes from the full result.
+rows = [
+    {"memo": r["memo"], "review": review_reason(r)}
+    for r in results
+    if r.get("memo")
+]
 
 filter_choice = st.sidebar.radio(
     "Show memo type:",
     options=["All", "outdated", "coverage_gap"]
 )
+only_review = st.sidebar.checkbox("Only memos that need review")
 
-if filter_choice == "All":
-    filtered_memos = memos
-else:
-    filtered_memos = [m for m in memos if m["memo_type"] == filter_choice]
+filtered = [
+    row for row in rows
+    if (filter_choice == "All" or row["memo"]["memo_type"] == filter_choice)
+    and (not only_review or row["review"])
+]
 
-st.write(f"Showing {len(filtered_memos)} of {len(memos)} memos")
+review_count = sum(1 for row in rows if row["review"])
+st.write(f"Showing {len(filtered)} of {len(rows)} memos ({review_count} flagged for review)")
 administrative_count = sum(1 for r in results if r["category"] == "administrative")
 not_applicable_count = sum(1 for r in results if r.get("verdict") == "not_applicable")
 st.caption(
     f"{administrative_count} regulations were screened out as administrative, "
     f"and {not_applicable_count} were judged not applicable to {COMPANY_NAME}, so neither got a memo."
 )
+
 table_data = [
     {
-        "Title": memo["regulation_title"],
-        "Type": memo["memo_type"],
-        "Date": memo["publication_date"],
+        "Review": "⚠ Needs review" if row["review"] else "",
+        "Title": row["memo"]["regulation_title"],
+        "Type": row["memo"]["memo_type"],
+        "Date": row["memo"]["publication_date"],
     }
-    for memo in filtered_memos
+    for row in filtered
 ]
 st.dataframe(
     table_data,
@@ -53,8 +63,12 @@ st.dataframe(
 st.divider()
 st.subheader("Full memos")
 
-for memo in filtered_memos:
-    with st.expander(f"{memo['regulation_title']} — {memo['memo_type']}"):
+for row in filtered:
+    memo = row["memo"]
+    marker = "⚠ " if row["review"] else ""
+    with st.expander(f"{marker}{memo['regulation_title']} — {memo['memo_type']}"):
+        if row["review"]:
+            st.warning(f"Needs review: {row['review']}")
         st.write(memo["memo_text"])
         if memo.get("judge_reasoning"):
             st.caption(f"Judge reasoning: {memo['judge_reasoning']}")
